@@ -1,0 +1,134 @@
+% Clayton Cohn
+% clayton@claytoncohn.com
+% 27 Sep 2020
+
+% CSC594: Advanced Topics in Deep Learning
+% Prof. Noriko Tomuro
+% Assignment 1
+
+% Template from Hannah W. Richards via Overleaf.com (attribution below)
+
+% "I don't care what the output of using this template looks like, i.e. you don't have to attribute me or mention anything about the template in the generated PDF that you submit to Goldwater. If you modify this template and release it as a separate .tex file, however, please attribute me in the header."
+
+% ASSIGNMENT:
+
+    % It should be a concise summary of your work.  
+    
+    % It should include the descriptions of models and performance results.  
+    
+    % It should also include your analyses, discussions and reflections.  
+    
+    % Anything you think is important to report.
+    
+    % Visualization of filters/feature maps for Part 2.
+    
+    % Your overall comments/reaction on the assignment.
+
+
+\documentclass[12pt, letterpaper, onecolumn]{article}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{fontspec}
+\setmainfont{Arial}
+\usepackage{fancyhdr}
+\usepackage[dvipsnames]{xcolor}
+\setlength{\headheight}{45pt}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage[]{siunitx}
+\usepackage{indentfirst}
+\usepackage[style=numeric,sorting=none]{biblatex}
+\usepackage{subcaption}
+
+\addbibresource{references.bib}
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\lhead{Clayton Cohn\\clayton@claytoncohn.com\\27 Sep 2020}
+\rhead{DePaul University\\CSC594: Advanced Deep Learning\\Prof. Noriko Tomuro}
+
+\begin{document}
+% title
+\begin{center}
+\textbf{Assignment 1}
+\end{center}
+
+\noindent\textbf{Overview}\\
+\indent The purpose of this assignment was to model the TensorFlow dataset "Rock, Paper, Scissors" \cite{rps} with a Convolutional Neural Network (CNN) via transfer learning. We were instructed to experiment with a variety of architectures and then submit our results to a Kaggle competition \cite{kaggle}. I also experimented with fine-tuning, data augmentation, and training a model from scratch (no transfer learning, i.e. no weights). Additionally, we were instructed to visualize a CNN (trained from scratch) via its filters and feature maps. My best model was the VGG19 \cite{vgg} CNN with ImageNet weights, fine-tuning, and data augmentation. It achieved an error of 0.038 and an accuracy of 98\% which placed third in the Kaggle competition. 
+
+\vspace{0.125in}
+% Methods
+\noindent\textbf{Methods}\\
+\indent The first model I tried was VGG19. I implemented it via the Keras documentation \cite{keras}. Initially, I set the model's pretrained weights to "None" so that they would be randomly initialized. As expected, performance was underwhelming: validation accuracy struggled to eclipse 40\% after five epochs. Next, I implemented VGG19 with ImageNet weights. The validation accuracy achieved 100\% within the first two epochs—obviously a drastic sign of overfitting. Considering the training dataset was small (~3000 instances), overfitting was an inevitability. This is not uncommon in transfer learning, as one of the primary advantages of transfer learning is the ability to utilize deep learning to model small datasets. To combat this, I implemented data augmentation \cite{da}.\\
+\indent I added a sequential data augmentation layer to the VGG19 model that randomly flipped and rotated the training set instances during preprocessing. This improved accuracy on the test set by a few percentage points. At this point, I started experimenting with other models on the augmented dataset. The specific models will be further discussed in the next section.\\
+\indent After experimenting with the various models, VGG19 was still the best-performing, so this was the model that I chose for fine-tuning implementation. For fine-tuning, I unfroze the top four convolution layers so that they could be trained. Fine-tuning augmented my accuracy considerably, significantly reducing my error. I also trained VGG19 from scratch (weights="None") to see how the performance compared to the transfer learning approach. The various errors and accuracies are located in the "Results" section.
+
+\vspace{0.125in}
+% Models
+\noindent\textbf{Models}\\
+\indent I experimented with four different models: VGG19, ResNet152V2 \cite{resnet}, Xception \cite{xception}, and InceptionResNetV2 \cite{inception}. These models were chosen due to their high reported accuracies in the Keras documentation \cite{keras}. For each model after VGG19, I only implemented transfer learning with ImageNet weights and augmented data. The reason for this was that randomly initialized weights already proved to be ineffective at modeling the dataset, and ImageNet weights without data augmentation had a propensity for overfitting the dataset. Therefore, I chose to compare each model via ImageNet weights and augmented data, as I surmised that this combination would yield the best performance (i.e. lowest test set error). 
+
+\vspace{0.125in}
+% Results
+\noindent\textbf{Results}\\
+\indent As stated earlier, my best results were with the VGG19 model and ImageNet weights. Data augmentation helped improve my accuracy by reducing overfitting, and fine-tuning the top 4 layers of convolution added an additional performance boost. The errors and accuracies for the various VGG19 implementations are listed below in Table 1, with the best-performing model highlighted in yellow. Errors and accuracies for the other models mentioned in the previous section were not specified due to their underperformance relative to VGG19. I did not experiment extensively with hyperparameter tuning. I implemented both RMSProp and Adam optimizers and noticed a slight performance increase with RMSProp. The learning rate for both optimizers was kept at 0.0001 except for the fine-tuning process where it was reduced by a power of 10 to 0.00001.
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{VGG19 Model} & \textbf{Error} & \textbf{Acc.} \\ \hline
+Transfer Learning (TL), no weights & 1.971 & 0.79 \\\hline
+TL, ImageNet weights & 0.425 & 0.88 \\\hline
+TL \& Data Augmentation (DA) & 0.113 & 0.96 \\ \hline
+\colorbox{yellow}{DA \& Fine-Tuning} & \colorbox{yellow}{0.038}      & \colorbox{yellow}{0.98} \\ \hline
+\end{tabular}
+\end{center}
+\caption{VGG19 models with errors and accuracies.}
+\label{table:ExampleTable}
+\end{table}
+
+\vspace{0.125in}
+% Visualization
+\noindent\textbf{Visualization}\\
+
+\indent To visualize the model, both feature maps and filters were produced. I utilized the code provided from François Chollet's book \cite{chollet} for the feature maps, and I used the Keras documentation \cite{filters} (also courtesy of Chollet) for the filters. Instead of using my best performing model for the visualization process, I opted to train (and overfit) VGG19 from scratch to see exactly what the model had learned from our training data (as opposed to ImageNet). I trained the model for 50 epochs with random weight initializations on the original (unaugmented) training set. Figure 1 illustrates a filer and several feature maps.\\
+
+% LaTeX for inserting images side by side taken from Gonzalo Medina via https://tex.stackexchange.com/questions/37581/latex-figures-side-by-side
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.4\linewidth]{img/filter.png}
+  \caption{A filter}
+  \label{fig:sub1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.4\linewidth]{img/feature_maps.png}
+  \caption{Some feature maps}
+  \label{fig:sub2}
+\end{subfigure}
+\caption{A filter and some feature maps}
+\label{fig:test}
+\end{figure}
+
+\vspace{0.125in}
+% Difficulties
+\noindent\textbf{\\\\Difficulties}\\
+\indent Overall, I did not encounter many difficulties with the assignment or its implementation. It was clear from the start that overfitting would be an issue, as the dataset was small in size; however, I knew that this could be remedied with data augmentation. There were some minor TensorFlow versioning issues between the various references, but this is to be expected—much of the documentation for machine learning becomes obsolete within several months of publication. Lastly, I did run into some GPU memory issues with Colab. I remedied this by reducing the batch size from 128 to 16.
+
+\vspace{0.125in}
+% Reflections
+\noindent\textbf{Reflections}\\
+\indent I thought this was a great assignment. It was my first foray into computer vision, and I thought it was a great opportunity to implement models with various CNN architectures. Furthermore, this was also a nice opportunity to see the power of the ImageNet weights. I had heard about ImageNet for some time, but this was my first experience seeing its power first-hand. I also enjoyed comparing and contrasting the various implementation methods, i.e. transfer learning and fine-tuning. Lastly, I thought visualizing the filters and feature maps was an incredibly effective way of ascertaining a visual understanding of the model used to make its predictions. Altogether, I thoroughly enjoyed this assignment.
+
+\vspace{0.125in}
+%\newpage
+% references: this should be automatic. you can also cut out extra info (titles, websites) if you're running out of space. i used 7 references in my essay, so take that info as you will.
+\noindent\textbf{References}
+\vspace{-0.125in}
+\printbibliography[heading=none]
+
+\end{document}
